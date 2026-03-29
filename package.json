@@ -1,0 +1,29 @@
+{
+  "name": "tts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "start": "bun index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Panthaweekan/tts.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Panthaweekan/tts/issues"
+  },
+  "homepage": "https://github.com/Panthaweekan/tts#readme",
+  "dependencies": {
+    "edge-tts-universal": "^1.4.0",
+    "tmi.js": "^1.8.5"
+  }
+}
