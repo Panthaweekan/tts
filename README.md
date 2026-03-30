@@ -13,6 +13,7 @@ A high-performance Twitch chat-to-speech bot powered by **Microsoft Edge Neural 
 - **Anti-Spam Protection** — Global + per-user cooldowns, message length limits, emoji-only filtering, and bot blacklisting
 - **Easy Configuration** — All settings adjustable via a single `.env` file
 - **Bun Native** — Built for [Bun](https://bun.sh) runtime for ultra-fast startup and low memory usage (~15MB)
+- **Smart Launcher** — One command to set up, authenticate, and start the bot automatically
 
 ## 📋 Prerequisites
 
@@ -20,8 +21,8 @@ A high-performance Twitch chat-to-speech bot powered by **Microsoft Edge Neural 
 |---|---|
 | [Bun](https://bun.sh) v1.1+ | `powershell -c "irm bun.sh/install.ps1 \| iex"` |
 | [FFmpeg](https://ffmpeg.org) (includes `ffplay`) | `winget install ffmpeg` |
-| Twitch Account | [twitch.tv](https://twitch.tv) |
-| Twitch OAuth Token | See [Authentication](#-authentication) below |
+| [Twitch CLI](https://dev.twitch.tv/docs/cli/) | Download from the official page |
+| Twitch Developer App | See [Authentication](#-authentication) below |
 
 ## 🚀 Quick Start
 
@@ -33,13 +34,15 @@ cd tts
 # 2. Install dependencies
 bun install
 
-# 3. Configure environment
+# 3. Set your Twitch username and channel in .env
 cp .env.example .env
-# Edit .env with your Twitch credentials (see Authentication section)
+# Edit .env: set BOT_USERNAME and CHANNEL
 
-# 4. Run the bot
-bun index.js
+# 4. One-command setup & launch
+bun run go
 ```
+
+> The launcher will automatically open a browser for Twitch authentication, save your token, and start the bot — no manual copy-pasting required.
 
 ## 🔐 Authentication
 
@@ -48,43 +51,41 @@ This bot uses **Twitch's official OAuth flow** via [Twitch CLI](https://dev.twit
 ### One-Time Setup
 
 1. **Register a Twitch App** at [dev.twitch.tv/console](https://dev.twitch.tv/console):
-   - Name: `Your TTS Bot`
+   - Name: anything (e.g. `Xanta TTS Bot`)
    - OAuth Redirect URL: `http://localhost:3000`
    - Category: `Chat Bot`
    - Copy your **Client ID** and **Client Secret**
 
 2. **Install & configure Twitch CLI:**
    ```bash
-   # Download from https://dev.twitch.tv/docs/cli/
    twitch configure
    # Enter your Client ID and Client Secret when prompted
    ```
 
-3. **Generate a token with chat permissions:**
+3. **Run the launcher** — it handles authentication automatically:
    ```bash
-   twitch token -u -s "chat:read chat:edit"
+   bun run go
    ```
-   A browser window will open — log in with the account you want the bot to use.
+   A browser window opens → log in with the bot account → the launcher captures and saves the token for you.
 
-4. **Update your `.env`:**
-   ```env
-   BOT_USERNAME=your_bot_username
-   OAUTH_TOKEN=oauth:<token_from_step_3>
-   CHANNEL=your_channel_name
-   ```
+### Token Expired?
 
-> **Note:** Tokens expire periodically. If the bot fails to connect, regenerate with `twitch token -u -s "chat:read chat:edit"`.
+```bash
+bun run auth
+```
+
+This re-authenticates, updates `.env` automatically, and restarts the bot — all in one step. The token is **never displayed in full** in the terminal (shown as `abc***xyz`).
 
 ## ⚙️ Configuration
 
-All settings are in your `.env` file. Every setting has a sensible default — you only need to set the three credentials to get started.
+All settings are in your `.env` file. Only the three credentials are required — everything else has sensible defaults.
 
 | Setting | Default | Description |
 |---|---|---|
 | `BOT_USERNAME` | *(required)* | Twitch username of the bot account |
-| `OAUTH_TOKEN` | *(required)* | OAuth token (must start with `oauth:`) |
+| `OAUTH_TOKEN` | *(auto-set by launcher)* | OAuth token — managed automatically |
 | `CHANNEL` | *(required)* | Twitch channel to listen to |
-| `TTS_VOICE` | `th-TH-PremwadeeNeural` | Neural voice to use ([see voices](#-available-voices)) |
+| `TTS_VOICE` | `th-TH-PremwadeeNeural` | Neural voice to use ([see voices](#️-available-voices)) |
 | `TTS_VOLUME` | `-95%` | Volume adjustment (`-100%` to `+0%`) |
 | `NAME_MAX_LENGTH` | `6` | Max characters for username readout |
 | `SESSION_WINDOW_MS` | `30000` | Skip username for repeat speaker (ms) |
@@ -100,6 +101,14 @@ All settings are in your `.env` file. Every setting has a sensible default — y
 | `en-US-EmmaMultilingualNeural` | Multi | Female | Handles Thai + English smoothly |
 | `en-US-AndrewMultilingualNeural` | Multi | Male | Natural, deep multilingual voice |
 | `en-US-AvaMultilingualNeural` | Multi | Female | Youthful, energetic voice |
+
+## 🛠️ Commands
+
+| Command | Description |
+|---|---|
+| `bun run go` | Start the bot (auto-auth if token missing) |
+| `bun run auth` | Force re-authenticate and restart |
+| `bun run start` | Run bot directly (skips launcher) |
 
 ## 🧱 Architecture
 
@@ -127,7 +136,8 @@ Desktop Audio → OBS
 
 ```
 tts/
-├── index.js          # Bot logic (single file, ~180 lines)
+├── index.js          # Bot core logic (~185 lines)
+├── launcher.js       # Smart Launcher (auth + startup)
 ├── package.json      # Dependencies & scripts
 ├── .env              # Your credentials & settings (git-ignored)
 ├── .env.example      # Template for .env
@@ -142,6 +152,7 @@ tts/
 - **TTS Engine:** [edge-tts-universal](https://www.npmjs.com/package/edge-tts-universal) — Microsoft Edge Neural TTS
 - **Chat Client:** [tmi.js](https://tmijs.com) — Twitch IRC
 - **Audio Player:** [FFplay](https://ffmpeg.org/ffplay.html) — lightweight audio player (part of FFmpeg)
+- **Auth:** [Twitch CLI](https://dev.twitch.tv/docs/cli/) — official Twitch token management
 
 ## 📄 License
 

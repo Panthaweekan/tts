@@ -8,6 +8,8 @@
   },
   "scripts": {
     "start": "bun index.js",
+    "go": "bun launcher.js",
+    "auth": "bun launcher.js --auth",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
