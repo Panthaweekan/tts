@@ -1,19 +1,46 @@
-import { spawn } from "bun";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
+import { startBot } from "./index.js";
 
-const envPath = join(import.meta.dir, ".env");
-const examplePath = join(import.meta.dir, ".env.example");
+// Resolve project root at RUNTIME
+// In script mode: import.meta.path ends with ".js" → use import.meta.dir (correct source dir)
+// In compiled .exe: import.meta.path is a virtual bunfs path → use dirname(process.execPath)
+const isCompiled = typeof Bun !== "undefined" && !import.meta.path.endsWith(".js");
+const ROOT        = isCompiled ? dirname(process.execPath) : import.meta.dir;
+const envPath     = join(ROOT, ".env");
+const examplePath = join(ROOT, ".env.example");
 
-// 🛠️ Helper: UI
-const info = (msg) => console.log(`\x1b[36mℹ️  ${msg}\x1b[0m`);
+// 🛠️ UI helpers
+const info    = (msg) => console.log(`\x1b[36mℹ️  ${msg}\x1b[0m`);
 const success = (msg) => console.log(`\x1b[32m✅ ${msg}\x1b[0m`);
-const warn = (msg) => console.log(`\x1b[33m⚠️  ${msg}\x1b[0m`);
-const error = (msg) => console.log(`\x1b[31m❌ ${msg}\x1b[0m`);
+const warn    = (msg) => console.log(`\x1b[33m⚠️  ${msg}\x1b[0m`);
+const error   = (msg) => console.log(`\x1b[31m❌ ${msg}\x1b[0m`);
 
 function mask(token) {
   if (token.length <= 6) return "******";
   return token.substring(0, 3) + "***" + token.substring(token.length - 3);
+}
+
+/** Parse a .env file and return a plain object */
+function parseEnv(content) {
+  const vars = {};
+  for (const line of content.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eqIdx = trimmed.indexOf("=");
+    if (eqIdx === -1) continue;
+    const key = trimmed.substring(0, eqIdx).trim();
+    const val = trimmed.substring(eqIdx + 1).trim();
+    vars[key] = val;
+  }
+  return vars;
+}
+
+/** Inject an env object into process.env */
+function injectEnv(vars) {
+  for (const [key, val] of Object.entries(vars)) {
+    process.env[key] = val;
+  }
 }
 
 async function setup() {
@@ -21,7 +48,7 @@ async function setup() {
 
   const FORCE_AUTH = process.argv.includes("--auth");
 
-  // 1. Check if .env exists
+  // 1. Ensure .env exists
   if (!existsSync(envPath)) {
     info(".env not found. Creating from template...");
     if (!existsSync(examplePath)) {
@@ -32,16 +59,13 @@ async function setup() {
     success(".env created from template.");
   }
 
-  // 2. Load .env
+  // 2. Load & parse .env
   let envContent = readFileSync(envPath, "utf8");
-  const getEnv = (key) => {
-    const match = envContent.match(new RegExp(`^${key}=(.*)$`, "m"));
-    return match ? match[1].trim() : null;
-  };
+  let envVars    = parseEnv(envContent);
 
-  const username = getEnv("BOT_USERNAME");
-  const channel = getEnv("CHANNEL");
-  let token = getEnv("OAUTH_TOKEN");
+  const username = envVars["BOT_USERNAME"];
+  const channel  = envVars["CHANNEL"];
+  let   token    = envVars["OAUTH_TOKEN"];
 
   // 3. Validate basic config
   if (!username || username === "your_bot_username" || !channel || channel === "your_channel_name") {
@@ -60,7 +84,7 @@ async function setup() {
     info("Opening browser for Twitch authorization...");
     console.log();
 
-    // Twitch CLI outputs token info to stderr, so capture both streams
+    // Twitch CLI may write to stdout or stderr
     const authProc = spawn(["twitch", "token", "-u", "-s", "chat:read chat:edit"], {
       stdout: "pipe",
       stderr: "pipe",
@@ -72,24 +96,24 @@ async function setup() {
     ]);
     await authProc.exited;
 
-    // Twitch CLI may output to either stream
-    const output = stdoutText + "\n" + stderrText;
-
-    // Parse the token from CLI output
+    const output     = stdoutText + "\n" + stderrText;
     const tokenMatch = output.match(/User Access Token:\s*(\S+)/);
 
     if (!tokenMatch) {
       error("Could not extract token from Twitch CLI output.");
-      info("Please run manually: twitch token -u -s \"chat:read chat:edit\"");
+      info('Please run manually: twitch token -u -s "chat:read chat:edit"');
       process.exit(1);
     }
 
-    const rawToken = tokenMatch[1];
+    const rawToken      = tokenMatch[1];
     const formattedToken = rawToken.startsWith("oauth:") ? rawToken : `oauth:${rawToken}`;
 
-    // Update .env
+    // Persist to .env
     envContent = envContent.replace(/^OAUTH_TOKEN=.*$/m, `OAUTH_TOKEN=${formattedToken}`);
     writeFileSync(envPath, envContent);
+
+    // Update local parse result for injection below
+    envVars["OAUTH_TOKEN"] = formattedToken;
 
     success(`Token saved: ${mask(rawToken)}`);
   } else {
@@ -97,18 +121,13 @@ async function setup() {
     info(`Using existing token: ${mask(cleanToken)}`);
   }
 
-  // 5. Launch bot
+  // 5. Inject all .env values into process.env (critical for compiled .exe)
+  injectEnv(envVars);
+
+  // 6. Start the bot directly in the same process
   console.log();
   success("Launching TTS Bot...\n");
-
-  const bot = spawn(["bun", "index.js"], {
-    stdout: "inherit",
-    stderr: "inherit",
-    stdin: "inherit",
-    cwd: import.meta.dir,
-  });
-
-  await bot.exited;
+  await startBot();
 }
 
 setup().catch((err) => {

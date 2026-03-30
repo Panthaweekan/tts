@@ -39,6 +39,9 @@ cp .env.example .env
 # Edit .env: set BOT_USERNAME and CHANNEL
 
 # 4. One-command setup & launch
+# Use the batch file for Windows or npm commands
+./start-tts.bat
+# OR
 bun run go
 ```
 
@@ -106,7 +109,8 @@ All settings are in your `.env` file. Only the three credentials are required �
 
 | Command | Description |
 |---|---|
-| `bun run go` | Start the bot (auto-auth if token missing) |
+| `start-tts.bat` | Windows: Launch bot (auto-auth + Terminal title) |
+| `bun run go` | Start the bot via Bun (auto-auth if token missing) |
 | `bun run auth` | Force re-authenticate and restart |
 | `bun run start` | Run bot directly (skips launcher) |
 
@@ -138,6 +142,7 @@ Desktop Audio → OBS
 tts/
 ├── index.js          # Bot core logic (~185 lines)
 ├── launcher.js       # Smart Launcher (auth + startup)
+├── start-tts.bat     # Windows one-click launcher
 ├── package.json      # Dependencies & scripts
 ├── .env              # Your credentials & settings (git-ignored)
 ├── .env.example      # Template for .env
