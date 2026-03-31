@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
+import { spawn } from "bun";
 import { startBot } from "./index.js";
 
 // Resolve project root at RUNTIME
