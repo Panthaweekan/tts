@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
-import { loadConfig } from '../src/config.js';
+import { loadConfig } from '../src/config.ts';
 
 describe('loadConfig', () => {
   const REQUIRED = {
@@ -59,7 +59,7 @@ describe('loadConfig', () => {
   test('returns a frozen object', () => {
     const config = loadConfig();
     expect(() => {
-      config.channel = 'hacked';
+      (config as any).channel = 'hacked';
     }).toThrow();
   });
 

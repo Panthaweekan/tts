@@ -2,20 +2,21 @@
   "name": "tts",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.ts",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
-    "start": "bun index.js",
-    "go": "bun launcher.js",
-    "auth": "bun launcher.js --auth",
-    "build": "bun build --compile --windows-icon=XantaTTS.ico --outfile=XantaTTS.exe ./launcher.js",
+    "start": "bun index.ts",
+    "go": "bun launcher.ts",
+    "auth": "bun launcher.ts --auth",
+    "build": "bun build --compile --windows-icon=XantaTTS.ico --outfile=XantaTTS.exe ./launcher.ts",
     "test": "bun test",
     "lint": "eslint src/ tests/",
     "format": "prettier --write src/ tests/",
     "format:check": "prettier --check src/ tests/",
-    "precommit": "bun run lint && bun run format:check && bun run test"
+    "typecheck": "tsc --noEmit",
+    "precommit": "bun run lint && bun run format:check && bun run typecheck && bun run test"
   },
   "repository": {
     "type": "git",
@@ -34,7 +35,13 @@
     "tmi.js": "^1.8.5"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/bun": "^1.3.12",
+    "@types/node": "^25.6.0",
+    "@types/tmi.js": "^1.8.6",
     "eslint": "^10.2.0",
-    "prettier": "^3.8.2"
+    "prettier": "^3.8.2",
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.58.1"
   }
 }

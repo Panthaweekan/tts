@@ -1,30 +1,30 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { spawn } from "bun";
-import { startBot } from "./src/bot.js";
+import { startBot } from "./src/bot.ts";
 
 // Resolve project root at RUNTIME
-// In script mode: import.meta.path ends with ".js" → use import.meta.dir (correct source dir)
+// In script mode: import.meta.path ends with ".ts" → use import.meta.dir (correct source dir)
 // In compiled .exe: import.meta.path is a virtual bunfs path → use dirname(process.execPath)
-const isCompiled = typeof Bun !== "undefined" && !import.meta.path.endsWith(".js");
+const isCompiled = typeof Bun !== "undefined" && !import.meta.path.endsWith(".ts");
 const ROOT        = isCompiled ? dirname(process.execPath) : import.meta.dir;
 const envPath     = join(ROOT, ".env");
 const examplePath = join(ROOT, ".env.example");
 
 // 🛠️ UI helpers
-const info    = (msg) => console.log(`\x1b[36mℹ️  ${msg}\x1b[0m`);
-const success = (msg) => console.log(`\x1b[32m✅ ${msg}\x1b[0m`);
-const warn    = (msg) => console.log(`\x1b[33m⚠️  ${msg}\x1b[0m`);
-const error   = (msg) => console.log(`\x1b[31m❌ ${msg}\x1b[0m`);
+const info    = (msg: string) => console.log(`\x1b[36mℹ️  ${msg}\x1b[0m`);
+const success = (msg: string) => console.log(`\x1b[32m✅ ${msg}\x1b[0m`);
+const warn    = (msg: string) => console.log(`\x1b[33m⚠️  ${msg}\x1b[0m`);
+const error   = (msg: string) => console.log(`\x1b[31m❌ ${msg}\x1b[0m`);
 
-function mask(token) {
+function mask(token: string): string {
   if (token.length <= 6) return "******";
   return token.substring(0, 3) + "***" + token.substring(token.length - 3);
 }
 
 /** Parse a .env file and return a plain object */
-function parseEnv(content) {
-  const vars = {};
+function parseEnv(content: string): Record<string, string> {
+  const vars: Record<string, string> = {};
   for (const line of content.split(/\r?\n/)) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith("#")) continue;
@@ -38,7 +38,7 @@ function parseEnv(content) {
 }
 
 /** Inject an env object into process.env */
-function injectEnv(vars) {
+function injectEnv(vars: Record<string, string>): void {
   for (const [key, val] of Object.entries(vars)) {
     process.env[key] = val;
   }
@@ -131,7 +131,8 @@ async function setup() {
   await startBot();
 }
 
-setup().catch((err) => {
-  error(`Launcher failed: ${err.message}`);
+setup().catch((err: Error | unknown) => {
+  const msg = err instanceof Error ? err.message : String(err);
+  error(`Launcher failed: ${msg}`);
   process.exit(1);
 });

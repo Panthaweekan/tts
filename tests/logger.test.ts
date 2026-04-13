@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach, spyOn } from 'bun:test';
-import { createLogger, setLogLevel, getLogLevel } from '../src/logger.js';
+import { createLogger, setLogLevel, getLogLevel } from '../src/logger.ts';
 
 describe('setLogLevel', () => {
   afterEach(() => setLogLevel('info'));
@@ -7,7 +7,7 @@ describe('setLogLevel', () => {
   test('accepts valid log levels', () => {
     for (const level of ['debug', 'info', 'warn', 'error']) {
       setLogLevel(level);
-      expect(getLogLevel()).toBe(level);
+      expect(getLogLevel()).toBe(level as any);
     }
   });
 
@@ -17,14 +17,14 @@ describe('setLogLevel', () => {
   });
 
   test('throws on invalid level', () => {
-    expect(() => setLogLevel('verbose')).toThrow('Invalid log level');
+    expect(() => setLogLevel('verbose' as any)).toThrow('Invalid log level');
   });
 });
 
 describe('createLogger', () => {
-  let logSpy;
-  let warnSpy;
-  let errorSpy;
+  let logSpy: any;
+  let warnSpy: any;
+  let errorSpy: any;
 
   beforeEach(() => {
     logSpy = spyOn(console, 'log').mockImplementation(() => {});

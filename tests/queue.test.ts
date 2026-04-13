@@ -1,9 +1,9 @@
 import { describe, test, expect } from 'bun:test';
-import { createQueue } from '../src/queue.js';
+import { createQueue } from '../src/queue.ts';
 
 describe('createQueue', () => {
   test('processes items in FIFO order', async () => {
-    const processed = [];
+    const processed: string[] = [];
     const q = createQueue({
       maxSize: 10,
       processor: async (item) => {
@@ -17,9 +17,9 @@ describe('createQueue', () => {
   });
 
   test('priority items jump to the front of the pending queue', async () => {
-    const processed = [];
-    let unblock;
-    const blocker = new Promise((r) => {
+    const processed: string[] = [];
+    let unblock: () => void = () => {};
+    const blocker = new Promise<void>((r) => {
       unblock = r;
     });
 
@@ -41,15 +41,12 @@ describe('createQueue', () => {
   });
 
   test('silently drops items when max size is reached', async () => {
-    const processed = [];
-    let unblock;
-    const blocker = new Promise((r) => {
+    const processed: string[] = [];
+    let unblock: () => void = () => {};
+    const blocker = new Promise<void>((r) => {
       unblock = r;
     });
 
-    // maxSize: 1 means only 1 item can be pending. The first item is already
-    // being processed (shifted out), so 'second' fills the pending slot and
-    // 'dropped' exceeds maxSize and gets silently discarded.
     const q = createQueue({
       maxSize: 1,
       processor: async (item) => {
@@ -68,7 +65,7 @@ describe('createQueue', () => {
   });
 
   test('processes items sequentially — never concurrent', async () => {
-    const active = [];
+    const active: string[] = [];
     let maxConcurrent = 0;
 
     const q = createQueue({
@@ -81,9 +78,9 @@ describe('createQueue', () => {
       },
     });
 
-    q.enqueue({ text: 'a' }, { priority: false });
-    q.enqueue({ text: 'b' }, { priority: false });
-    q.enqueue({ text: 'c' }, { priority: false });
+    q.enqueue({ text: 'a' });
+    q.enqueue({ text: 'b' });
+    q.enqueue({ text: 'c' });
 
     await new Promise((r) => setTimeout(r, 100));
     expect(maxConcurrent).toBe(1);

@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { createCooldownManager } from '../src/cooldowns.js';
+import { createCooldownManager } from '../src/cooldowns.ts';
 
 describe('createCooldownManager', () => {
   test('allows first message immediately', () => {

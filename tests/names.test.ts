@@ -1,8 +1,8 @@
 import { describe, test, expect } from 'bun:test';
-import { createNameManager } from '../src/names.js';
+import { createNameManager } from '../src/names.ts';
 
 /** Build a minimal tmi.js tags object */
-function tags(displayName, username) {
+function tags(displayName: string, username?: string): any {
   return { 'display-name': displayName, username: username || displayName.toLowerCase() };
 }
 

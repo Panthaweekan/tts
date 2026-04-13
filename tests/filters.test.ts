@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { isValidMessage, isBlacklisted } from '../src/filters.js';
+import { isValidMessage, isBlacklisted } from '../src/filters.ts';
 
 const DEFAULTS = { minLength: 3, maxLength: 120 };
 

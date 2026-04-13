@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { createHealthTracker } from '../src/health.js';
+import { createHealthTracker } from '../src/health.ts';
 
 describe('createHealthTracker', () => {
   test('starts with zero counts and not connected', () => {

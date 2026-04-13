@@ -1,18 +1,17 @@
 import tmi from 'tmi.js';
-import { loadConfig } from './config.js';
-import { setLogLevel, createLogger } from './logger.js';
-import { createHealthTracker } from './health.js';
-import { isValidMessage, isBlacklisted } from './filters.js';
-import { createCooldownManager } from './cooldowns.js';
-import { createNameManager } from './names.js';
-import { createQueue } from './queue.js';
-import { speak } from './tts.js';
+import { loadConfig } from './config.ts';
+import { setLogLevel, createLogger } from './logger.ts';
+import { createHealthTracker } from './health.ts';
+import { isValidMessage, isBlacklisted } from './filters.ts';
+import { createCooldownManager } from './cooldowns.ts';
+import { createNameManager } from './names.ts';
+import { createQueue } from './queue.ts';
+import { speak } from './tts.ts';
 
 /**
  * Start the TTS bot. Loads config, wires all modules, connects to Twitch IRC.
- * @returns {Promise<void>}
  */
-export async function startBot() {
+export async function startBot(): Promise<void> {
   const config = loadConfig();
 
   // Initialize observability
@@ -52,7 +51,7 @@ export async function startBot() {
 
   log.info('Connecting to Twitch IRC...');
 
-  client.connect().catch((err) => {
+  client.connect().catch((err: Error | unknown) => {
     log.error('Failed to connect to Twitch IRC:', err);
     process.exit(1);
   });
@@ -65,34 +64,37 @@ export async function startBot() {
     log.debug(`Retry: ${config.ttsRetryAttempts} attempts, ${config.ttsRetryDelayMs}ms base delay`);
   });
 
-  client.on('message', (_channel, tags, message, self) => {
-    if (self) return;
+  client.on(
+    'message',
+    (_channel: string, tags: tmi.ChatUserstate, message: string, self: boolean) => {
+      if (self) return;
 
-    const text = message.trim();
-    const username = tags.username;
-    const messageType = tags['message-type'];
+      const text = message.trim();
+      const username = tags.username;
+      const messageType = tags['message-type'];
 
-    if (
-      !isValidMessage(text, messageType, {
-        minLength: config.minMessageLength,
-        maxLength: config.maxMessageLength,
-      })
-    )
-      return;
+      if (
+        !isValidMessage(text, messageType, {
+          minLength: config.minMessageLength,
+          maxLength: config.maxMessageLength,
+        })
+      )
+        return;
 
-    if (isBlacklisted(username, config.botBlacklist)) return;
+      if (username && isBlacklisted(username, config.botBlacklist)) return;
 
-    if (!cooldowns.canSpeak(username)) return;
-    cooldowns.record(username);
+      if (username && !cooldowns.canSpeak(username)) return;
+      if (username) cooldowns.record(username);
 
-    health.recordMessage();
+      health.recordMessage();
 
-    const formattedText = names.format(tags, text);
-    const isSubscriber = Boolean(tags.subscriber);
+      const formattedText = names.format(tags, text);
+      const isSubscriber = Boolean(tags.subscriber);
 
-    log.debug(`Queued [${isSubscriber ? 'SUB' : 'REG'}]: ${formattedText}`);
-    queue.enqueue({ text: formattedText }, { priority: isSubscriber });
-  });
+      log.debug(`Queued [${isSubscriber ? 'SUB' : 'REG'}]: ${formattedText}`);
+      queue.enqueue({ text: formattedText }, { priority: isSubscriber });
+    }
+  );
 
   client.on('disconnected', () => {
     const status = health.getStatus();
@@ -106,7 +108,7 @@ export async function startBot() {
     );
   });
 
-  async function shutdown() {
+  async function shutdown(): Promise<void> {
     const status = health.getStatus();
     log.info(
       `Shutting down — ${status.messageCount} msgs, ` +

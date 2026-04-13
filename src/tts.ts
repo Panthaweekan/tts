@@ -1,19 +1,28 @@
 import { Communicate } from 'edge-tts-universal';
-import { createLogger } from './logger.js';
+import { createLogger } from './logger.ts';
 
 const log = createLogger('tts');
+
+export interface SpeakOptions {
+  voice: string;
+  volume: string;
+  retryAttempts?: number;
+  retryDelayMs?: number;
+}
 
 /**
  * Synthesize text to speech and play it through ffplay (zero-disk streaming).
  * Retries on failure with exponential backoff.
  *
- * @param {string} text - The text to speak.
- * @param {{ voice: string, volume: string, retryAttempts?: number, retryDelayMs?: number }} options
- * @returns {Promise<void>}
- * @throws {Error} If all retry attempts fail.
+ * @param text - The text to speak.
+ * @param options
+ * @throws If all retry attempts fail.
  */
-export async function speak(text, { voice, volume, retryAttempts = 3, retryDelayMs = 500 }) {
-  let lastError;
+export async function speak(
+  text: string,
+  { voice, volume, retryAttempts = 3, retryDelayMs = 500 }: SpeakOptions
+): Promise<void> {
+  let lastError: Error | unknown;
 
   for (let attempt = 1; attempt <= retryAttempts; attempt++) {
     try {
@@ -46,6 +55,7 @@ export async function speak(text, { voice, volume, retryAttempts = 3, retryDelay
   }
 
   // All attempts exhausted
-  log.error(`Failed after ${retryAttempts} attempts: ${lastError.message}`);
+  const msg = lastError instanceof Error ? lastError.message : String(lastError);
+  log.error(`Failed after ${retryAttempts} attempts: ${msg}`);
   throw lastError;
 }
