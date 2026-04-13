@@ -148,36 +148,57 @@ Desktop Audio → OBS
 ```
 tts/
 ├── src/
-│   ├── config.js          # Config loading + validation
-│   ├── filters.js         # Pure message validation (length, type, emoji)
-│   ├── cooldowns.js       # Stateful cooldown tracking (global + per-user)
-│   ├── names.js           # Username cleaning + session cache
-│   ├── tts.js             # Edge TTS → ffplay audio pipeline
-│   ├── queue.js           # Priority queue with sequential processing
-│   └── bot.js             # Orchestrator — wires all modules
-├── tests/
-│   ├── config.test.js
-│   ├── filters.test.js
-│   ├── cooldowns.test.js
-│   ├── names.test.js
-│   └── queue.test.js
-├── index.js               # Entry point → startBot()
-├── launcher.js            # Smart launcher (auth + startup)
-├── eslint.config.js       # ESLint v9 flat config
+│   ├── config.ts          # Config loading + validation
+│   ├── filters.ts         # Pure message validation (length, type, emoji)
+│   ├── cooldowns.ts       # Stateful cooldown tracking (global + per-user)
+│   ├── names.ts           # Username cleaning + session cache
+│   ├── tts.ts             # Edge TTS → ffplay audio pipeline (with retry)
+│   ├── queue.ts           # Priority queue with sequential processing
+│   ├── logger.ts          # Structured logging (namespaced, level-gated)
+│   ├── health.ts          # Session metrics tracker
+│   └── bot.ts             # Orchestrator — wires all modules
+├── tests/                 # 53 automated tests
+├── .github/workflows/
+│   ├── ci.yml             # Quality gates (lint, format, typecheck, test)
+│   └── release.yml        # Build .exe + publish to GitHub Releases
+├── index.ts               # Entry point → startBot()
+├── launcher.ts            # Smart launcher (auth + startup)
+├── tsconfig.json          # TypeScript strict config
+├── eslint.config.js       # ESLint + typescript-eslint flat config
 ├── .prettierrc            # Prettier formatting config
+├── CHANGELOG.md           # Version history
 ├── package.json
 ├── .env                   # Credentials (git-ignored)
 ├── .env.example           # Config template
 └── .gitignore
 ```
 
+## 🚀 Releasing
+
+To publish a new release:
+
+```bash
+# 1. Bump version in package.json
+npm version patch   # or minor / major
+
+# 2. Push the tag — triggers GitHub Actions to build & release
+git push origin --tags
+```
+
+The release workflow will automatically:
+- Run all quality gates (lint, format, typecheck, test)
+- Compile `XantaTTS.exe` on Windows
+- Create a GitHub Release with the `.exe` attached
+
 ## 🛠️ Tech Stack
 
-- **Runtime:** [Bun](https://bun.sh) — fast JavaScript runtime
+- **Runtime:** [Bun](https://bun.sh) — fast JavaScript/TypeScript runtime
+- **Language:** [TypeScript](https://www.typescriptlang.org/) — strict type safety
 - **TTS Engine:** [edge-tts-universal](https://www.npmjs.com/package/edge-tts-universal) — Microsoft Edge Neural TTS
 - **Chat Client:** [tmi.js](https://tmijs.com) — Twitch IRC
 - **Audio Player:** [FFplay](https://ffmpeg.org/ffplay.html) — lightweight audio player (part of FFmpeg)
 - **Auth:** [Twitch CLI](https://dev.twitch.tv/docs/cli/) — official Twitch token management
+- **CI/CD:** [GitHub Actions](https://github.com/features/actions) — automated quality gates + releases
 
 ## 📄 License
 
