@@ -47,10 +47,16 @@ jobs:
           body: |
             ## XantaTTS ${{ steps.version.outputs.tag }}
 
-            ### Installation
+            ### Quick Start
             1. Download `XantaTTS.exe` below
-            2. Place it in a folder with your `.env` file
-            3. Double-click to launch
+            2. Double-click to launch
+            3. Follow the on-screen setup wizard
+
+            The launcher will guide you through FFmpeg installation, Twitch credentials, and authorization automatically.
+
+            ### Prerequisites
+            - Windows 10/11
+            - Internet connection
 
             ### What's New
             See [CHANGELOG.md](https://github.com/Panthaweekan/tts/blob/main/CHANGELOG.md) for full details.

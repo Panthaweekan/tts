@@ -17,59 +17,50 @@ A high-performance Twitch chat-to-speech bot powered by **Microsoft Edge Neural 
 
 ## 📋 Prerequisites
 
+### Using the `.exe` (Recommended)
+No setup needed — just download and double-click. The launcher will guide you through everything.
+
+### Using from source
 | Requirement | Install |
 |---|---|
 | [Bun](https://bun.sh) v1.1+ | `powershell -c "irm bun.sh/install.ps1 \| iex"` |
 | [FFmpeg](https://ffmpeg.org) (includes `ffplay`) | `winget install ffmpeg` |
-| [Twitch CLI](https://dev.twitch.tv/docs/cli/) | Download from the official page |
-| Twitch Developer App | See [Authentication](#-authentication) below |
 
 ## 🚀 Quick Start
 
+### Option A: Download the `.exe` (easiest)
+1. Download `XantaTTS.exe` from [Releases](https://github.com/Panthaweekan/tts/releases)
+2. Double-click to launch
+3. The setup wizard will:
+   - Install FFmpeg if needed
+   - Ask for your Twitch bot username and channel
+   - Open your browser for Twitch authorization
+4. Done — the bot starts automatically!
+
+### Option B: Run from source
 ```bash
-# 1. Clone the repository
 git clone https://github.com/Panthaweekan/tts.git
 cd tts
-
-# 2. Install dependencies
 bun install
-
-# 3. Set your Twitch username and channel in .env
-cp .env.example .env
-# Edit .env: set BOT_USERNAME and CHANNEL
-
-# 4. One-command setup & launch
-# Use the batch file for Windows or npm commands
-./start-tts.bat
-# OR
 bun run go
 ```
 
-> The launcher will automatically open a browser for Twitch authentication, save your token, and start the bot — no manual copy-pasting required.
-
 ## 🔐 Authentication
 
-This bot uses **Twitch's official OAuth flow** via [Twitch CLI](https://dev.twitch.tv/docs/cli/) — no third-party token generators needed.
+The bot uses **Twitch's OAuth Implicit Grant Flow** for a secure login process.
 
-### One-Time Setup
+For your privacy, the launcher requires you to use your own Twitch Developer App. On first run, it will ask you to:
+1. Go to [dev.twitch.tv/console](https://dev.twitch.tv/console)
+2. Click 'Register Your Application'
+3. Name it anything (e.g. `XantaTTS`)
+4. Set the OAuth Redirect URL to `http://localhost:3000/callback`
+5. Set the Category to `Chat Bot`
+6. Click Create, Manage, and copy the **Client ID** into the launcher.
 
-1. **Register a Twitch App** at [dev.twitch.tv/console](https://dev.twitch.tv/console):
-   - Name: anything (e.g. `Xanta TTS Bot`)
-   - OAuth Redirect URL: `http://localhost:3000`
-   - Category: `Chat Bot`
-   - Copy your **Client ID** and **Client Secret**
-
-2. **Install & configure Twitch CLI:**
-   ```bash
-   twitch configure
-   # Enter your Client ID and Client Secret when prompted
-   ```
-
-3. **Run the launcher** — it handles authentication automatically:
-   ```bash
-   bun run go
-   ```
-   A browser window opens → log in with the bot account → the launcher captures and saves the token for you.
+After that, the launcher will:
+1. Open your browser to Twitch's authorization page
+2. You log in and click "Authorize"
+3. The token is captured automatically and saved to `.env`
 
 ### Token Expired?
 
@@ -77,7 +68,7 @@ This bot uses **Twitch's official OAuth flow** via [Twitch CLI](https://dev.twit
 bun run auth
 ```
 
-This re-authenticates, updates `.env` automatically, and restarts the bot — all in one step. The token is **never displayed in full** in the terminal (shown as `abc***xyz`).
+This re-authenticates and restarts the bot. The token is **never displayed in full** (shown as `abc***xyz`).
 
 ## ⚙️ Configuration
 
