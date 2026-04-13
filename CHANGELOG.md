@@ -5,8 +5,19 @@ All notable changes to XantaTTS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] — 2026-04-13
+## [1.1.0] — 2026-04-13
 
+### Added
+- **Bring Your Own App (BYOA)** — Fully secure OAuth flow requiring personalized \`Client ID\` endpoints.
+- **Embedded OAuth Webserver** — Native local server (via `src/auth.ts`) handles Twitch Implicit Grant Flow natively without third-party CLI software.
+- **Interactive First-Run Wizard** — Formats prompts automatically into terminals to guide users to capture `Client ID`, `TWITCH_USERNAME`, and `CHANNEL` dynamically.
+- **Prerequisites Engine** — Detects available standard `ffplay` installations locally, offering automated installation fallbacks straight via `winget`.
+- **Aesthetic Overhauls** — Complete redesign of the terminal success states and Twitch-themed browser completion pop-up callbacks.
+
+### Changed
+- Refactored `.env` implementations to natively bind straight into runtime configurations (eliminating the need for trailing `.env.example` templates in distribution).
+
+## [1.0.0] — 2026-04-13
 ### Added
 - **Modular architecture** — Decomposed monolithic bot into 9 focused modules (`config`, `filters`, `cooldowns`, `names`, `queue`, `tts`, `bot`, `logger`, `health`).
 - **Structured logging** — Namespaced, level-gated, colored log output via `LOG_LEVEL` env var.
