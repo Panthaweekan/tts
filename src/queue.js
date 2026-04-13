@@ -1,9 +1,13 @@
+import { createLogger } from './logger.js';
+
+const log = createLogger('queue');
+
 /**
  * Creates a priority queue that processes items sequentially using a provided processor.
- * @param {{ maxSize: number, processor: (item: object) => Promise<void> }} options
+ * @param {{ maxSize: number, processor: (item: object) => Promise<void>, onError?: (err: Error) => void }} options
  * @returns {{ enqueue(item: object, opts: { priority: boolean }): void }}
  */
-export function createQueue({ maxSize, processor }) {
+export function createQueue({ maxSize, processor, onError }) {
   const items = [];
   let isProcessing = false;
 
@@ -16,7 +20,8 @@ export function createQueue({ maxSize, processor }) {
       try {
         await processor(item);
       } catch (err) {
-        console.error('[queue] Processor error:', err.message);
+        log.error('Processor error:', err.message);
+        if (onError) onError(err);
       }
     }
 

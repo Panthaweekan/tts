@@ -26,5 +26,10 @@ export function loadConfig() {
     maxMessageLength: 120,
     minMessageLength: 3,
     botBlacklist: ['nightbot', 'streamelements', 'streamlabs'],
+
+    // Observability (Phase 2)
+    logLevel: (process.env.LOG_LEVEL || 'info').toLowerCase(),
+    ttsRetryAttempts: parseInt(process.env.TTS_RETRY_ATTEMPTS) || 3,
+    ttsRetryDelayMs: parseInt(process.env.TTS_RETRY_DELAY_MS) || 500,
   });
 }

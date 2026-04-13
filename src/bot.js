@@ -1,5 +1,7 @@
 import tmi from 'tmi.js';
 import { loadConfig } from './config.js';
+import { setLogLevel, createLogger } from './logger.js';
+import { createHealthTracker } from './health.js';
 import { isValidMessage, isBlacklisted } from './filters.js';
 import { createCooldownManager } from './cooldowns.js';
 import { createNameManager } from './names.js';
@@ -12,6 +14,11 @@ import { speak } from './tts.js';
  */
 export async function startBot() {
   const config = loadConfig();
+
+  // Initialize observability
+  setLogLevel(config.logLevel);
+  const log = createLogger('bot');
+  const health = createHealthTracker();
 
   const cooldowns = createCooldownManager({
     globalMs: config.globalCooldownMs,
@@ -26,9 +33,16 @@ export async function startBot() {
   const queue = createQueue({
     maxSize: config.maxQueueSize,
     processor: async ({ text }) => {
-      console.log(`[TTS] Streaming Audio: ${text}`);
-      await speak(text, { voice: config.ttsVoice, volume: config.ttsVolume });
+      log.info(`Streaming: ${text}`);
+      await speak(text, {
+        voice: config.ttsVoice,
+        volume: config.ttsVolume,
+        retryAttempts: config.ttsRetryAttempts,
+        retryDelayMs: config.ttsRetryDelayMs,
+      });
+      health.recordTtsSuccess();
     },
+    onError: () => health.recordTtsError(),
   });
 
   const client = new tmi.Client({
@@ -36,17 +50,19 @@ export async function startBot() {
     channels: [config.channel],
   });
 
-  console.log('🔗 Connecting to Twitch IRC...');
+  log.info('Connecting to Twitch IRC...');
 
   client.connect().catch((err) => {
-    console.error('[FATAL] Failed to connect to Twitch IRC:', err);
+    log.error('Failed to connect to Twitch IRC:', err);
     process.exit(1);
   });
 
   client.on('connected', () => {
-    console.log('✅ [BUN NATIVE V2] Zero-Disk Streaming Active');
-    console.log(`✅ [TARGET] ${config.channel}`);
-    console.log(`🔊 [SETTING] Voice: ${config.ttsVoice} | Volume: ${config.ttsVolume}`);
+    health.markConnected();
+    log.info('Zero-Disk Streaming Active');
+    log.info(`Channel: ${config.channel}`);
+    log.info(`Voice: ${config.ttsVoice} | Volume: ${config.ttsVolume}`);
+    log.debug(`Retry: ${config.ttsRetryAttempts} attempts, ${config.ttsRetryDelayMs}ms base delay`);
   });
 
   client.on('message', (_channel, tags, message, self) => {
@@ -69,16 +85,34 @@ export async function startBot() {
     if (!cooldowns.canSpeak(username)) return;
     cooldowns.record(username);
 
+    health.recordMessage();
+
     const formattedText = names.format(tags, text);
     const isSubscriber = Boolean(tags.subscriber);
 
+    log.debug(`Queued [${isSubscriber ? 'SUB' : 'REG'}]: ${formattedText}`);
     queue.enqueue({ text: formattedText }, { priority: isSubscriber });
   });
 
-  client.on('disconnected', () => console.log('\n🛑 Twitch Client Disconnected.'));
+  client.on('disconnected', () => {
+    const status = health.getStatus();
+    log.warn('Twitch Client Disconnected.');
+    log.info(
+      `Session: ${status.messageCount} msgs, ` +
+        `${status.ttsSuccessCount} played, ` +
+        `${status.ttsErrorCount} errors, ` +
+        `${status.retryCount} retries, ` +
+        `${status.uptimeMinutes}min uptime`
+    );
+  });
 
   async function shutdown() {
-    console.log('\n🛑 Shutting down...');
+    const status = health.getStatus();
+    log.info(
+      `Shutting down — ${status.messageCount} msgs, ` +
+        `${status.ttsSuccessCount} played, ` +
+        `${status.ttsErrorCount} errors`
+    );
     try {
       await client.disconnect();
     } catch (_) {}

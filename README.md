@@ -94,6 +94,9 @@ All settings are in your `.env` file. Only the three credentials are required �
 | `SESSION_WINDOW_MS` | `30000` | Skip username for repeat speaker (ms) |
 | `COOLDOWN_GLOBAL_MS` | `2000` | Global cooldown between messages (ms) |
 | `COOLDOWN_USER_MS` | `8000` | Per-user cooldown (ms) |
+| `LOG_LEVEL` | `info` | Log verbosity: `debug`, `info`, `warn`, `error` |
+| `TTS_RETRY_ATTEMPTS` | `3` | Number of retry attempts for failed TTS |
+| `TTS_RETRY_DELAY_MS` | `500` | Base delay between retries (doubles each attempt) |
 
 ## 🎙️ Available Voices
 

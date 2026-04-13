@@ -20,6 +20,9 @@ describe('loadConfig', () => {
     delete process.env.SESSION_WINDOW_MS;
     delete process.env.COOLDOWN_GLOBAL_MS;
     delete process.env.COOLDOWN_USER_MS;
+    delete process.env.LOG_LEVEL;
+    delete process.env.TTS_RETRY_ATTEMPTS;
+    delete process.env.TTS_RETRY_DELAY_MS;
   });
 
   test('throws when BOT_USERNAME is missing', () => {
@@ -66,5 +69,22 @@ describe('loadConfig', () => {
     const config = loadConfig();
     expect(config.ttsVoice).toBe('en-US-EmmaMultilingualNeural');
     expect(config.nameMaxLength).toBe(10);
+  });
+
+  test('applies default observability settings when not set', () => {
+    const config = loadConfig();
+    expect(config.logLevel).toBe('info');
+    expect(config.ttsRetryAttempts).toBe(3);
+    expect(config.ttsRetryDelayMs).toBe(500);
+  });
+
+  test('reads custom observability settings from env', () => {
+    process.env.LOG_LEVEL = 'DEBUG';
+    process.env.TTS_RETRY_ATTEMPTS = '5';
+    process.env.TTS_RETRY_DELAY_MS = '1000';
+    const config = loadConfig();
+    expect(config.logLevel).toBe('debug');
+    expect(config.ttsRetryAttempts).toBe(5);
+    expect(config.ttsRetryDelayMs).toBe(1000);
   });
 });
