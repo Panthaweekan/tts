@@ -39,6 +39,9 @@ cp .env.example .env
 # Edit .env: set BOT_USERNAME and CHANNEL
 
 # 4. One-command setup & launch
+# Use the batch file for Windows or npm commands
+./start-tts.bat
+# OR
 bun run go
 ```
 
@@ -91,6 +94,9 @@ All settings are in your `.env` file. Only the three credentials are required �
 | `SESSION_WINDOW_MS` | `30000` | Skip username for repeat speaker (ms) |
 | `COOLDOWN_GLOBAL_MS` | `2000` | Global cooldown between messages (ms) |
 | `COOLDOWN_USER_MS` | `8000` | Per-user cooldown (ms) |
+| `LOG_LEVEL` | `info` | Log verbosity: `debug`, `info`, `warn`, `error` |
+| `TTS_RETRY_ATTEMPTS` | `3` | Number of retry attempts for failed TTS |
+| `TTS_RETRY_DELAY_MS` | `500` | Base delay between retries (doubles each attempt) |
 
 ## 🎙️ Available Voices
 
@@ -106,9 +112,14 @@ All settings are in your `.env` file. Only the three credentials are required �
 
 | Command | Description |
 |---|---|
-| `bun run go` | Start the bot (auto-auth if token missing) |
+| `start-tts.bat` | Windows: Launch bot (auto-auth + Terminal title) |
+| `bun run go` | Start the bot via Bun (auto-auth if token missing) |
 | `bun run auth` | Force re-authenticate and restart |
 | `bun run start` | Run bot directly (skips launcher) |
+| `bun run test` | Run test suite (bun:test) |
+| `bun run lint` | Lint src/ and tests/ with ESLint |
+| `bun run format` | Auto-format src/ and tests/ with Prettier |
+| `bun run precommit` | Run lint + format check + tests |
 
 ## 🧱 Architecture
 
@@ -136,23 +147,58 @@ Desktop Audio → OBS
 
 ```
 tts/
-├── index.js          # Bot core logic (~185 lines)
-├── launcher.js       # Smart Launcher (auth + startup)
-├── package.json      # Dependencies & scripts
-├── .env              # Your credentials & settings (git-ignored)
-├── .env.example      # Template for .env
-├── .gitignore
-├── bun.lock
-└── docs/             # Design specs
+├── src/
+│   ├── config.ts          # Config loading + validation
+│   ├── filters.ts         # Pure message validation (length, type, emoji)
+│   ├── cooldowns.ts       # Stateful cooldown tracking (global + per-user)
+│   ├── names.ts           # Username cleaning + session cache
+│   ├── tts.ts             # Edge TTS → ffplay audio pipeline (with retry)
+│   ├── queue.ts           # Priority queue with sequential processing
+│   ├── logger.ts          # Structured logging (namespaced, level-gated)
+│   ├── health.ts          # Session metrics tracker
+│   └── bot.ts             # Orchestrator — wires all modules
+├── tests/                 # 53 automated tests
+├── .github/workflows/
+│   ├── ci.yml             # Quality gates (lint, format, typecheck, test)
+│   └── release.yml        # Build .exe + publish to GitHub Releases
+├── index.ts               # Entry point → startBot()
+├── launcher.ts            # Smart launcher (auth + startup)
+├── tsconfig.json          # TypeScript strict config
+├── eslint.config.js       # ESLint + typescript-eslint flat config
+├── .prettierrc            # Prettier formatting config
+├── CHANGELOG.md           # Version history
+├── package.json
+├── .env                   # Credentials (git-ignored)
+├── .env.example           # Config template
+└── .gitignore
 ```
+
+## 🚀 Releasing
+
+To publish a new release:
+
+```bash
+# 1. Bump version in package.json
+npm version patch   # or minor / major
+
+# 2. Push the tag — triggers GitHub Actions to build & release
+git push origin --tags
+```
+
+The release workflow will automatically:
+- Run all quality gates (lint, format, typecheck, test)
+- Compile `XantaTTS.exe` on Windows
+- Create a GitHub Release with the `.exe` attached
 
 ## 🛠️ Tech Stack
 
-- **Runtime:** [Bun](https://bun.sh) — fast JavaScript runtime
+- **Runtime:** [Bun](https://bun.sh) — fast JavaScript/TypeScript runtime
+- **Language:** [TypeScript](https://www.typescriptlang.org/) — strict type safety
 - **TTS Engine:** [edge-tts-universal](https://www.npmjs.com/package/edge-tts-universal) — Microsoft Edge Neural TTS
 - **Chat Client:** [tmi.js](https://tmijs.com) — Twitch IRC
 - **Audio Player:** [FFplay](https://ffmpeg.org/ffplay.html) — lightweight audio player (part of FFmpeg)
 - **Auth:** [Twitch CLI](https://dev.twitch.tv/docs/cli/) — official Twitch token management
+- **CI/CD:** [GitHub Actions](https://github.com/features/actions) — automated quality gates + releases
 
 ## 📄 License
 

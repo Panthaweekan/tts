@@ -3,3 +3,6 @@ node_modules/
 .DS_Store
 temp_audio/
 *.mp3
+*.lnk
+*.exe
+*.ico
