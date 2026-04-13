@@ -8,8 +8,10 @@ const AUTH_TIMEOUT_MS = 120_000; // 2 minutes
 
 /** HTML page served at the callback URL — extracts token from URL fragment */
 const CALLBACK_HTML = `<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>XantaTTS — Authorization</title>
   <style>
     body {
