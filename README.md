@@ -113,6 +113,10 @@ All settings are in your `.env` file. Only the three credentials are required �
 | `bun run go` | Start the bot via Bun (auto-auth if token missing) |
 | `bun run auth` | Force re-authenticate and restart |
 | `bun run start` | Run bot directly (skips launcher) |
+| `bun run test` | Run test suite (bun:test) |
+| `bun run lint` | Lint src/ and tests/ with ESLint |
+| `bun run format` | Auto-format src/ and tests/ with Prettier |
+| `bun run precommit` | Run lint + format check + tests |
 
 ## 🧱 Architecture
 
@@ -140,15 +144,28 @@ Desktop Audio → OBS
 
 ```
 tts/
-├── index.js          # Bot core logic (~185 lines)
-├── launcher.js       # Smart Launcher (auth + startup)
-├── start-tts.bat     # Windows one-click launcher
-├── package.json      # Dependencies & scripts
-├── .env              # Your credentials & settings (git-ignored)
-├── .env.example      # Template for .env
-├── .gitignore
-├── bun.lock
-└── docs/             # Design specs
+├── src/
+│   ├── config.js          # Config loading + validation
+│   ├── filters.js         # Pure message validation (length, type, emoji)
+│   ├── cooldowns.js       # Stateful cooldown tracking (global + per-user)
+│   ├── names.js           # Username cleaning + session cache
+│   ├── tts.js             # Edge TTS → ffplay audio pipeline
+│   ├── queue.js           # Priority queue with sequential processing
+│   └── bot.js             # Orchestrator — wires all modules
+├── tests/
+│   ├── config.test.js
+│   ├── filters.test.js
+│   ├── cooldowns.test.js
+│   ├── names.test.js
+│   └── queue.test.js
+├── index.js               # Entry point → startBot()
+├── launcher.js            # Smart launcher (auth + startup)
+├── eslint.config.js       # ESLint v9 flat config
+├── .prettierrc            # Prettier formatting config
+├── package.json
+├── .env                   # Credentials (git-ignored)
+├── .env.example           # Config template
+└── .gitignore
 ```
 
 ## 🛠️ Tech Stack

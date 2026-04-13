@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { spawn } from "bun";
-import { startBot } from "./index.js";
+import { startBot } from "./src/bot.js";
 
 // Resolve project root at RUNTIME
 // In script mode: import.meta.path ends with ".js" → use import.meta.dir (correct source dir)

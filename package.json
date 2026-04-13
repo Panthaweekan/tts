@@ -11,7 +11,11 @@
     "go": "bun launcher.js",
     "auth": "bun launcher.js --auth",
     "build": "bun build --compile --windows-icon=XantaTTS.ico --outfile=XantaTTS.exe ./launcher.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "bun test",
+    "lint": "eslint src/ tests/",
+    "format": "prettier --write src/ tests/",
+    "format:check": "prettier --check src/ tests/",
+    "precommit": "bun run lint && bun run format:check && bun run test"
   },
   "repository": {
     "type": "git",
@@ -28,5 +32,9 @@
   "dependencies": {
     "edge-tts-universal": "^1.4.0",
     "tmi.js": "^1.8.5"
+  },
+  "devDependencies": {
+    "eslint": "^10.2.0",
+    "prettier": "^3.8.2"
   }
 }
