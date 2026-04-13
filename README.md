@@ -119,7 +119,10 @@ All settings are in your `.env` file. Only the three credentials are required �
 | `bun run test` | Run test suite (bun:test) |
 | `bun run lint` | Lint src/ and tests/ with ESLint |
 | `bun run format` | Auto-format src/ and tests/ with Prettier |
-| `bun run precommit` | Run lint + format check + tests |
+| `bun run build` | Compile standalone `XantaTTS.exe` |
+| `bun run typecheck` | Run TypeScript type checker (`tsc --noEmit`) |
+| `bun run format:check` | Check formatting without writing |
+| `bun run precommit` | Run lint + format + typecheck + tests |
 
 ## 🧱 Architecture
 
@@ -202,4 +205,4 @@ The release workflow will automatically:
 
 ## 📄 License
 
-ISC
+[MIT](LICENSE)
